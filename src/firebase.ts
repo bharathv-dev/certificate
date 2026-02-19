@@ -5,13 +5,12 @@ import { getStorage } from "firebase/storage";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAgNdkMpB6NifmayR3mkhyrppNVM8aXTZA",
-    authDomain: "skacas-events-management.firebaseapp.com",
-    projectId: "skacas-events-management",
-    storageBucket: "skacas-events-management.firebasestorage.app",
-    messagingSenderId: "344761161721",
-    appId: "1:344761161721:web:d950b3aa28a3fbabe88f28",
-    measurementId: "G-D2Y1DPC30D"
+    apiKey: "AIzaSyApEq3L6sOdGZ0KP0kj1CmZOnsA9S6N9ZQ",
+    authDomain: "clg-09.firebaseapp.com",
+    projectId: "clg-09",
+    storageBucket: "clg-09.firebasestorage.app",
+    messagingSenderId: "122921376394",
+    appId: "1:122921376394:web:48b4aa88faaa9aa849eb73"
 };
 
 const app = initializeApp(firebaseConfig);
