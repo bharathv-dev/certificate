@@ -97,13 +97,24 @@ export function SignatureManagement() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <SignaturePad
-                label="Principal"
-                subtitle="Sri Krishna Adithya College"
-                savedSignature={signatures.principal}
-                onSave={setPrincipalSignature}
-                isLoading={isUploading}
-              />
+              <div className="bg-white rounded-xl shadow-lg shadow-black/5 border border-gray-100 p-6 sm:p-8">
+                <h3
+                  className="text-[#1F2A44] mb-0.5"
+                  style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.15rem", fontWeight: 600 }}
+                >
+                  Principal
+                </h3>
+                <p
+                  className="text-gray-500 mb-4"
+                  style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", fontWeight: 400 }}
+                >
+                  Sri Krishna Adithya College
+                </p>
+
+                <div className="flex items-center justify-center p-8 bg-gray-50 rounded-lg border border-gray-100">
+                  <p className="text-gray-500 italic">Signature is statically configured.</p>
+                </div>
+              </div>
             </motion.div>
           </div>
 
@@ -127,8 +138,8 @@ export function SignatureManagement() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
 
-              <div className={`flex items-center gap-3 p-3 rounded-lg border ${signatures.principal ? "border-green-200 bg-green-50" : "border-gray-100 bg-gray-50"}`}>
-                <div className={`w-2.5 h-2.5 rounded-full ${signatures.principal ? "bg-green-500" : "bg-gray-300"}`} />
+              <div className={`flex items-center gap-3 p-3 rounded-lg border border-green-200 bg-green-50`}>
+                <div className={`w-2.5 h-2.5 rounded-full bg-green-500`} />
                 <div>
                   <p
                     className="text-[#1F2A44]"
@@ -137,10 +148,10 @@ export function SignatureManagement() {
                     Dr. S. Palaniammal
                   </p>
                   <p
-                    className={signatures.principal ? "text-green-600" : "text-gray-400"}
+                    className="text-green-600"
                     style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.72rem", fontWeight: 400 }}
                   >
-                    {signatures.principal ? "Signature saved" : "No signature added"}
+                    Signature verified
                   </p>
                 </div>
               </div>

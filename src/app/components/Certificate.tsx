@@ -1,6 +1,7 @@
 import React from "react";
 import certificateTemplate from "../../assets/ec114ad7126d04c50a2c6e9e418b261aa4855b24.png";
 import adividyaLogo from "../../assets/adividya-logo.png";
+import principalSignatureImg from "../../assets/principal-signature.jpg";
 import { useSignatures } from "./SignatureContext";
 
 interface CertificateProps {
@@ -280,22 +281,20 @@ export const Certificate = React.forwardRef<HTMLDivElement, CertificateProps>(
           {/* Principal */}
           <div style={{ textAlign: "center" }}>
             {/* Signature image */}
-            {signatures.principal && (
-              <img
-                crossOrigin="anonymous"
-                src={signatures.principal}
-                alt="Principal Signature"
-                style={{
-                  width: "120px",
-                  height: "50px",
-                  objectFit: "contain",
-                  marginBottom: "4px",
-                  display: "block",
-                  marginLeft: "auto",
-                  marginRight: "auto",
-                }}
-              />
-            )}
+            <img
+              crossOrigin="anonymous"
+              src={principalSignatureImg}
+              alt="Principal Signature"
+              style={{
+                width: "120px",
+                height: "50px",
+                objectFit: "contain",
+                marginBottom: "4px",
+                display: "block",
+                marginLeft: "auto",
+                marginRight: "auto",
+              }}
+            />
             <div
               style={{
                 width: "130px",

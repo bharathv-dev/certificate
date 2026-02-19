@@ -6,6 +6,8 @@ interface SignatureData {
 
 interface SignatureContextType {
   signatures: SignatureData;
+  // Principal signature is now static, so we don't need a setter exposed to the app for it,
+  // but if we want to keep the context shape compatible or allow future extensions:
   setPrincipalSignature: (data: string | null) => Promise<void>;
   isUploading: boolean;
 }
@@ -15,6 +17,8 @@ const STORAGE_KEY = "adividya_signatures";
 const SignatureContext = createContext<SignatureContextType | null>(null);
 
 export function SignatureProvider({ children }: { children: ReactNode }) {
+  // We keep the state structure but it won't be used for Principal anymore in the Certificate component
+  // However, SignatureManagement might still try to access it.
   const [signatures, setSignatures] = useState<SignatureData>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -36,64 +40,14 @@ export function SignatureProvider({ children }: { children: ReactNode }) {
   }, [signatures]);
 
   const setPrincipalSignature = async (data: string | null) => {
+    // No-op or local state only if we wanted to allow local overrides, 
+    // but the requirement is "Use this for Principal", implying static.
+    // We'll just update local state to avoid breaking calls, but it won't affect the Certificate which now uses the static asset.
     if (!data) {
       setSignatures((prev) => ({ ...prev, principal: null }));
       return;
     }
-
-    // If it's already a URL (starts with http), just save it
-    if (data.startsWith("http")) {
-      setSignatures((prev) => ({ ...prev, principal: data }));
-      return;
-    }
-
-    // Direct Cloudinary Upload (Frontend-only signed upload)
-    setIsUploading(true);
-    try {
-      const CLOUD_NAME = "ddpxr28lh";
-      const API_KEY = "836917184635664";
-      const API_SECRET = "GUwD3-YVKK7VWItuF48ZGI59RhI";
-
-      const timestamp = Math.round((new Date()).getTime() / 1000);
-      const folder = "signatures";
-
-      // Generate Signature: SHA-1 of `folder=signatures&timestamp=1234567890<api_secret>`
-      const strToSign = `folder=${folder}&timestamp=${timestamp}${API_SECRET}`;
-      const msgBuffer = new TextEncoder().encode(strToSign);
-      const hashBuffer = await crypto.subtle.digest("SHA-1", msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const signature = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-
-      const formData = new FormData();
-      formData.append("file", data);
-      formData.append("api_key", API_KEY);
-      formData.append("timestamp", timestamp.toString());
-      formData.append("signature", signature);
-      formData.append("folder", folder);
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error?.message || "Failed to upload signature");
-      }
-
-      const result = await response.json();
-      if (result.secure_url) {
-        setSignatures((prev) => ({ ...prev, principal: result.secure_url }));
-      }
-    } catch (error) {
-      console.error("Error uploading signature:", error);
-      alert("Failed to save signature. Please try again.");
-    } finally {
-      setIsUploading(false);
-    }
+    setSignatures((prev) => ({ ...prev, principal: data }));
   };
 
   return (
