@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { User, Building2, Calendar, Phone, Mail, Sparkles, PenLine, FileText } from "lucide-react";
+import { User, Building2, Calendar, Sparkles, PenLine, FileText } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase"; // Importing from local firebase config
 
@@ -9,8 +9,6 @@ interface FormData {
   collegeName: string;
   eventName: string;
   paperTitle: string;
-  mobileNumber: string;
-  email: string;
 }
 
 interface CertificateFormProps {
@@ -136,8 +134,6 @@ export function CertificateForm({ onSubmit }: CertificateFormProps) {
     collegeName: "",
     eventName: "",
     paperTitle: "",
-    mobileNumber: "",
-    email: "",
   });
   const [selectedCollege, setSelectedCollege] = useState("");
   const [customCollege, setCustomCollege] = useState("");
@@ -191,17 +187,6 @@ export function CertificateForm({ onSubmit }: CertificateFormProps) {
       newErrors.paperTitle = "Paper title is required for Paper Presentation";
     }
 
-    if (!formData.mobileNumber.trim()) {
-      newErrors.mobileNumber = "Mobile number is required";
-    } else if (!/^\d{10}$/.test(formData.mobileNumber.trim())) {
-      newErrors.mobileNumber = "Enter a valid 10-digit mobile number";
-    }
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      newErrors.email = "Enter a valid email address";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -219,74 +204,17 @@ export function CertificateForm({ onSubmit }: CertificateFormProps) {
     setIsSubmitting(true);
 
     try {
-      let participantFound = false;
-      let isEligible = false;
-      let subEventFound = false;
+      // Simulate network delay for better UX
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
-      const querySnapshot = await getDocs(collection(db, "events"));
-
-      for (const doc of querySnapshot.docs) {
-        const data = doc.data();
-        if (data.subEvents) {
-          // Find the sub-event matching the selected name
-          const targetSubEvent = data.subEvents.find((se: any) => se.name === formData.eventName);
-
-          if (targetSubEvent) {
-            subEventFound = true;
-            // Check for participant match (Email and Mobile must match)
-            // Note: The screenshots show phone field as 'phone', not 'mobileNumber'. Using 'phone' to match DB.
-            const participant = targetSubEvent.participants.find((p: any) =>
-              p.email.toLowerCase() === formData.email.toLowerCase() &&
-              p.phone === formData.mobileNumber
-            );
-
-            if (participant) {
-              participantFound = true;
-              if (participant.attendance === 'present') {
-                isEligible = true;
-              }
-              // Found the participant, stop searching this sub-event
-              break;
-            }
-          }
-        }
-        // If eligible participant is found, stop searching other docs
-        if (isEligible) break;
-      }
-
-      if (!subEventFound) {
-        // This theoretically shouldn't happen if selecting from dropdown, but good safety
-        setErrors((prev) => ({ ...prev, eventName: "Event not found in database." }));
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!participantFound) {
-        setErrors((prev) => ({ ...prev, email: "Participant not registered for this event." }));
-        // Also could set a general form error, but email field is a good place
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!isEligible) {
-        // Found but not present
-        setErrors((prev) => ({
-          ...prev,
-          email: "Participant is not eligible for certificate (attendance not marked as present)."
-        }));
-        setIsSubmitting(false);
-        return;
-      }
-
-      // If checks pass
-      await new Promise((resolve) => setTimeout(resolve, 800)); // Small UX delay
+      // Direct submission - NO DATABASE VERIFICATION
       setIsSubmitting(false);
       onSubmit(submitData);
 
     } catch (error) {
-      console.error("Validation error:", error);
+      console.error("Submission error:", error);
       setIsSubmitting(false);
-      setErrors((prev) => ({ ...prev, email: "Error validating participation. Please try again." }));
+      setErrors((prev) => ({ ...prev, studentName: "Error submitting form. Please try again." }));
     }
   };
 
@@ -373,7 +301,7 @@ export function CertificateForm({ onSubmit }: CertificateFormProps) {
                   placeholder="Enter your full name"
                   value={formData.studentName}
                   onChange={(e) => handleChange("studentName", e.target.value)}
-                  className={`${inputBase} ${errors.studentName ? inputError : inputNormal}`}
+                  className={`${inputBase} ${errors.studentName ? inputError : inputNormal} `}
                   style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem" }}
                 />
               </div>
@@ -397,8 +325,8 @@ export function CertificateForm({ onSubmit }: CertificateFormProps) {
                 <select
                   value={selectedCollege}
                   onChange={(e) => handleCollegeSelect(e.target.value)}
-                  className={`${inputBase} appearance-none cursor-pointer ${errors.collegeName && !isOtherCollege ? inputError : inputNormal
-                    } ${!selectedCollege ? "text-gray-400" : "text-gray-900"}`}
+                  className={`${inputBase} appearance - none cursor - pointer ${errors.collegeName && !isOtherCollege ? inputError : inputNormal
+                    } ${!selectedCollege ? "text-gray-400" : "text-gray-900"} `}
                   style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem" }}
                 >
                   <option value="" disabled>
@@ -436,7 +364,7 @@ export function CertificateForm({ onSubmit }: CertificateFormProps) {
                         value={customCollege}
                         onChange={(e) => handleCustomCollegeChange(e.target.value)}
                         className={`${inputBase} ${errors.collegeName && isOtherCollege ? inputError : inputNormal
-                          }`}
+                          } `}
                         style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem" }}
                         autoFocus
                       />
@@ -471,8 +399,8 @@ export function CertificateForm({ onSubmit }: CertificateFormProps) {
                 <select
                   value={formData.eventName}
                   onChange={(e) => handleChange("eventName", e.target.value)}
-                  className={`${inputBase} appearance-none cursor-pointer ${errors.eventName ? inputError : inputNormal
-                    } ${!formData.eventName ? "text-gray-400" : "text-gray-900"}`}
+                  className={`${inputBase} appearance - none cursor - pointer ${errors.eventName ? inputError : inputNormal
+                    } ${!formData.eventName ? "text-gray-400" : "text-gray-900"} `}
                   style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem" }}
                 >
                   <option value="" disabled>
@@ -528,7 +456,7 @@ export function CertificateForm({ onSubmit }: CertificateFormProps) {
                           const titleCased = toTitleCase(e.target.value);
                           handleChange("paperTitle", titleCased);
                         }}
-                        className={`${inputBase} ${errors.paperTitle ? inputError : inputNormal}`}
+                        className={`${inputBase} ${errors.paperTitle ? inputError : inputNormal} `}
                         style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem" }}
                         autoFocus
                       />
@@ -548,61 +476,6 @@ export function CertificateForm({ onSubmit }: CertificateFormProps) {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Mobile Number */}
-            <div>
-              <label
-                className="block text-[#1F2A44] mb-1.5"
-                style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", fontWeight: 500 }}
-              >
-                Mobile Number <span className="text-red-400">*</span>
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="tel"
-                  placeholder="Enter 10-digit mobile number"
-                  value={formData.mobileNumber}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                    handleChange("mobileNumber", val);
-                  }}
-                  className={`${inputBase} ${errors.mobileNumber ? inputError : inputNormal}`}
-                  style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem" }}
-                />
-              </div>
-              {errors.mobileNumber && (
-                <p className="mt-1 text-red-500" style={{ fontSize: "0.78rem" }}>
-                  {errors.mobileNumber}
-                </p>
-              )}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label
-                className="block text-[#1F2A44] mb-1.5"
-                style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", fontWeight: 500 }}
-              >
-                Email Address <span className="text-red-400">*</span>
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="email"
-                  placeholder="Enter your email address"
-                  value={formData.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  className={`${inputBase} ${errors.email ? inputError : inputNormal}`}
-                  style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem" }}
-                />
-              </div>
-              {errors.email && (
-                <p className="mt-1 text-red-500" style={{ fontSize: "0.78rem" }}>
-                  {errors.email}
-                </p>
-              )}
-            </div>
 
             {/* Submit Button */}
             <motion.button

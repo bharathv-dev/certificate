@@ -8,8 +8,7 @@ interface FormData {
   collegeName: string;
   eventName: string;
   paperTitle: string;
-  mobileNumber: string;
-  email: string;
+  paperTitle: string;
 }
 
 export function HomePage() {

@@ -3,14 +3,15 @@ import { useLocation, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { Instagram, Linkedin, Lock, Unlock, CheckCircle, AlertCircle } from "lucide-react";
 import { CertificatePreview } from "./CertificatePreview";
-import { collection, getDocs, doc, updateDoc, getDoc } from "firebase/firestore";
-import { db } from "../../firebase";
 
 export function UnlockPage() {
     const location = useLocation();
     const navigate = useNavigate();
     const formData = location.state;
 
+    // Use simple local state for unlock status
+    // In a real production app with auth, this would be saved to a database.
+    // For this public generator, we'll just track it in the session.
     const [instagramClicked, setInstagramClicked] = useState(false);
     const [linkedinClicked, setLinkedinClicked] = useState(false);
     const [isUnlocked, setIsUnlocked] = useState(false);
@@ -25,96 +26,23 @@ export function UnlockPage() {
         }
     }, [formData, navigate]);
 
-    // Helper to find participant in Firestore
-    const findParticipantInFirestore = async () => {
-        try {
-            const querySnapshot = await getDocs(collection(db, "events"));
-            for (const eventDoc of querySnapshot.docs) {
-                const eventData = eventDoc.data();
-                if (eventData.subEvents) {
-                    const subEvents = eventData.subEvents;
-                    for (let sIdx = 0; sIdx < subEvents.length; sIdx++) {
-                        if (subEvents[sIdx].name === formData.eventName) {
-                            const participants = subEvents[sIdx].participants || [];
-                            for (let pIdx = 0; pIdx < participants.length; pIdx++) {
-                                const p = participants[pIdx];
-                                // Match by Email
-                                if (p.email && p.email.toLowerCase() === formData.email.toLowerCase()) {
-                                    return {
-                                        docRef: eventDoc.ref,
-                                        subEvents,
-                                        sIdx,
-                                        participants,
-                                        pIdx,
-                                        participant: p
-                                    };
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (err) {
-            console.error("Error searching Firestore:", err);
-        }
-        return null;
-    };
-
-    // Check initial status on load
+    // Check if both are clicked to unlock
     useEffect(() => {
-        if (!formData) return;
-        const fetchStatus = async () => {
-            const found = await findParticipantInFirestore();
-            if (found && found.participant) {
-                const { participant } = found;
-                if (participant.instagramClicked) setInstagramClicked(true);
-                if (participant.linkedinClicked) setLinkedinClicked(true);
-                if (participant.instagramClicked && participant.linkedinClicked) setIsUnlocked(true);
-            }
-        };
-        fetchStatus();
-    }, [formData]);
-
-    const updateFirestoreStatus = async (platform: "instagram" | "linkedin") => {
-        try {
-            const found = await findParticipantInFirestore();
-            if (found) {
-                const { docRef, subEvents, sIdx, participants, pIdx } = found;
-
-                // Update the specific participant object
-                if (platform === "instagram") participants[pIdx].instagramClicked = true;
-                if (platform === "linkedin") participants[pIdx].linkedinClicked = true;
-
-                if (participants[pIdx].instagramClicked && participants[pIdx].linkedinClicked) {
-                    participants[pIdx].socialUnlockCompleted = true;
-                }
-
-                // Update the subEvent's participants array
-                subEvents[sIdx].participants = participants;
-
-                // Write back to Firestore
-                await updateDoc(docRef, { subEvents });
-            }
-        } catch (err) {
-            console.error("Failed to update Firestore:", err);
+        if (instagramClicked && linkedinClicked) {
+            setIsUnlocked(true);
         }
-    };
+    }, [instagramClicked, linkedinClicked]);
 
-    const handleSocialClick = async (platform: "instagram" | "linkedin", url: string) => {
+    const handleSocialClick = (platform: "instagram" | "linkedin", url: string) => {
         // 1. Open Link
         window.open(url, "_blank");
 
         // 2. Update Local State
         if (platform === "instagram") {
             setInstagramClicked(true);
-            if (linkedinClicked) setIsUnlocked(true);
         } else {
             setLinkedinClicked(true);
-            if (instagramClicked) setIsUnlocked(true);
         }
-
-        // 3. Update Firestore (Backround)
-        await updateFirestoreStatus(platform);
     };
 
     const handleGenerate = async () => {
@@ -179,8 +107,8 @@ export function UnlockPage() {
                     <button
                         onClick={() => handleSocialClick("instagram", "https://www.instagram.com/official_skacas?igsh=bndsYWM1MmZqY2hi")}
                         className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 ${instagramClicked
-                                ? "border-green-500 bg-green-50 text-green-700"
-                                : "border-gray-200 hover:border-pink-500 hover:bg-pink-50 text-gray-700"
+                            ? "border-green-500 bg-green-50 text-green-700"
+                            : "border-gray-200 hover:border-pink-500 hover:bg-pink-50 text-gray-700"
                             }`}
                     >
                         <div className="flex items-center gap-3">
@@ -194,8 +122,8 @@ export function UnlockPage() {
                     <button
                         onClick={() => handleSocialClick("linkedin", "https://www.linkedin.com/school/srikrishna-adithya-college-of-arts-and-science/")}
                         className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 ${linkedinClicked
-                                ? "border-green-500 bg-green-50 text-green-700"
-                                : "border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-gray-700"
+                            ? "border-green-500 bg-green-50 text-green-700"
+                            : "border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-gray-700"
                             }`}
                     >
                         <div className="flex items-center gap-3">
@@ -217,8 +145,8 @@ export function UnlockPage() {
                     onClick={handleGenerate}
                     disabled={!isUnlocked || isGenerating}
                     className={`w-full py-3.5 rounded-xl font-bold text-lg transition-all duration-200 ${isUnlocked && !isGenerating
-                            ? "bg-[#DAA520] text-white shadow-lg shadow-yellow-500/30 hover:shadow-xl hover:-translate-y-1"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        ? "bg-[#DAA520] text-white shadow-lg shadow-yellow-500/30 hover:shadow-xl hover:-translate-y-1"
+                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
                         }`}
                 >
                     {isGenerating ? "Verifying & Generating..." : "Generate Certificate"}
